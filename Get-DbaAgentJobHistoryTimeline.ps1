@@ -17,6 +17,9 @@ Function Convert-ToJsDate ([datetime]$InputDate) {
     [datetime]$reportend =  if (!$EndTime -or $EndTime -eq "") {Get-date}
     [datetime]$reportstart = $reportend.AddHours(-$ChartPeriodHours)
 
+#------------------------------------------------------------------------------------------------------------------------------------------------
+# function to generate color based on the job statu
+#------------------------------------------------------------------------------------------------------------------------------------------------
 Function Get-StatusColor ([string]$Status) {
     $out = switch($Status){
         "Failed" {"#FF3D3D"}
