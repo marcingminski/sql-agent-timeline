@@ -1,8 +1,9 @@
-﻿Param (
+Param (
  [parameter(
         Mandatory         = $true,
         ValueFromPipeline = $false)]
-    $DbaAgentJobHistory
+    $DbaAgentJobHistory,
+ [Switch]$NoOpen
 )    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,7 +129,17 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
           pattern: 'dd/MM/yy hh:mm:ss'
         });
 
+        var colors=[];
+        var colorMap = {
+            Failed: '#FF3D3D',
+            Succeeded: '#2EB800',
+            Retry: '#7A7AFF',
+            Canceled: '#C2C2C2'
+        }
+
+
         for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
+          colors.push(colorMap[dataTable.getValue(i, 1)]);
           var duration = (dataTable.getValue(i, 4).getTime() - dataTable.getValue(i, 3).getTime()) / 1000;
           var hours = parseInt( duration / 3600 ) % 24;
           var minutes = parseInt( duration / 60 ) % 60;
@@ -152,6 +163,7 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
                 hAxis: {
                     format: 'dd/MM HH:MM',
                 },
+                colors: colors
             }
 
             chart.draw(dataTable, options);
@@ -192,4 +204,11 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
 "@
 
     #SPIT IT OUT:
-    ConvertTo-Html -Head $header -body $body -PostContent  $footer | Out-File "$ServerName_SQLAGENT_JOBS.html" -Encoding ASCII
+    $ServerName = $ServerName -replace "\\" , "-"
+    $ServerName = $ServerName -replace ",", "-"
+
+    ConvertTo-Html -Head $header -body $body -PostContent  $footer | Out-File "$($ServerName)_SQLAGENT_JOBS.html" -Encoding ASCII
+    
+    if ($NoOpen -eq $False) {
+        Invoke-Item "$($ServerName)_SQLAGENT_JOBS.html"
+    }
