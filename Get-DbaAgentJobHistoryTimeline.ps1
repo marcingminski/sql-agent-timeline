@@ -203,12 +203,19 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
 </html>
 "@
 
-    #SPIT IT OUT:
-    $ServerName = $ServerName -replace "\\" , "-"
-    $ServerName = $ServerName -replace ",", "-"
+#------------------------------------------------------------------------------------------------------------------------------------------------
+# create HTML file and sanitse server names, replace "," and "\"
+# "," will appear in servers with non standard port i.e. SQLSERVER001,14431
+# "\" will appear in servers with non standard instance i.e. SQLSERVER001\INSTANCE001
+#------------------------------------------------------------------------------------------------------------------------------------------------
+$ServerName = $ServerName -replace "\\" , "-"
+$ServerName = $ServerName -replace ",", "-"
 
-    ConvertTo-Html -Head $header -body $body -PostContent  $footer | Out-File "$($ServerName)_SQLAGENT_JOBS.html" -Encoding ASCII
-    
-    if ($NoOpen -eq $False) {
-        Invoke-Item "$($ServerName)_SQLAGENT_JOBS.html"
-    }
+ConvertTo-Html -Head $header -body $body -PostContent  $footer | Out-File "$($ServerName)_SQLAGENT_JOBS.html" -Encoding ASCII
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+# open in default browser if NoOpen flag not set:
+#------------------------------------------------------------------------------------------------------------------------------------------------    
+if ($NoOpen -eq $False) {
+    Invoke-Item "$($ServerName)_SQLAGENT_JOBS.html"
+}
