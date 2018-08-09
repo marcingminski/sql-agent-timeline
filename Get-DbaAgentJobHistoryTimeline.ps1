@@ -127,7 +127,7 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
         dataTable.insertColumn(2, {type: 'string', role: 'tooltip', p: {html: true}});
 
         var dateFormat = new google.visualization.DateFormat({
-          pattern: 'dd/MM/yy hh:mm:ss'
+          pattern: 'dd/MM/yy HH:mm:ss'
         });
 
         for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
@@ -153,7 +153,7 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
                 barLabelStyle: { }, 
             },
             hAxis: {
-                format: 'dd/MM HH:MM',
+                format: 'dd/MM HH:mm',
             },
         }
 
