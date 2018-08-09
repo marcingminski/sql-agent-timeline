@@ -17,6 +17,17 @@ Function Convert-ToJsDate ([datetime]$InputDate) {
     [datetime]$reportend =  if (!$EndTime -or $EndTime -eq "") {Get-date}
     [datetime]$reportstart = $reportend.AddHours(-$ChartPeriodHours)
 
+Function Get-StatusColor ([string]$Status) {
+    $out = switch($Status){
+        "Failed" {"#FF3D3D"}
+        "Succeeded" {"#36B300"}
+        "Retry" {"#FFFF00"}
+        "Canceled" {"#C2C2C2"}
+        "In Progress" {"#00CCFF"}
+        default {"#FF00CC"}
+    }
+    return $out
+}
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
 # strip input out of any extra columns 
@@ -102,21 +113,22 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
 #------------------------------------------------------------------------------------------------------------------------------------------------
  [string]$header+=@"
     <script type="text/javascript">
-    google.charts.load('43', {'packages':['timeline']});
+    google.charts.load('current', {'packages':['timeline']});
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
-        var container = document.getElementById('WhoIsActiveTimeLine');
+        var container = document.getElementById('SqlAgentJobs');
         var chart = new google.visualization.Timeline(container);
 
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn({type: 'string', id: 'vLabel'});
         dataTable.addColumn({type: 'string', id: 'hLabel'});
+        dataTable.addColumn({type: 'string', role: 'style' });
         dataTable.addColumn({type: 'date', id: 'date_start'});
         dataTable.addColumn({type: 'date', id: 'date_end'});
-
+  
         dataTable.addRows([
-     $( $data | %{"['$($_.Job)','$($_.Status)',$(Convert-ToJsDate $_.StartDate), $(Convert-ToJsDate $_.EndDate)],`r`n"})
+     $( $data | %{"['$($_.Job)','$($_.Status)','$(Get-StatusColor $_.Status)',$(Convert-ToJsDate $_.StartDate), $(Convert-ToJsDate $_.EndDate)],`r`n"})
         ]);
 
         var paddingHeight = 20;
@@ -129,18 +141,8 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
           pattern: 'dd/MM/yy hh:mm:ss'
         });
 
-        var colors=[];
-        var colorMap = {
-            Failed: '#FF3D3D',
-            Succeeded: '#2EB800',
-            Retry: '#7A7AFF',
-            Canceled: '#C2C2C2'
-        }
-
-
         for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
-          colors.push(colorMap[dataTable.getValue(i, 1)]);
-          var duration = (dataTable.getValue(i, 4).getTime() - dataTable.getValue(i, 3).getTime()) / 1000;
+          var duration = (dataTable.getValue(i, 5).getTime() - dataTable.getValue(i, 4).getTime()) / 1000;
           var hours = parseInt( duration / 3600 ) % 24;
           var minutes = parseInt( duration / 60 ) % 60;
           var seconds = duration % 60;
@@ -148,29 +150,28 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
           var tooltip = '<div class="timeline-tooltip"><span>' +
             dataTable.getValue(i, 1).split(",").join("<br />")  + '</span></div><div class="timeline-tooltip"><span>Job: ' +
             dataTable.getValue(i, 0) + '</span>: ' +
-            dateFormat.formatValue(dataTable.getValue(i, 3)) + ' - ' +
-            dateFormat.formatValue(dataTable.getValue(i, 4)) + '</div>' +
+            dateFormat.formatValue(dataTable.getValue(i, 4)) + ' - ' +
+            dateFormat.formatValue(dataTable.getValue(i, 5)) + '</div>' +
             '<div class="timeline-tooltip"><span>Duration: </span>' +
             hours + 'h ' + minutes + 'm ' + seconds + 's ';
 
           dataTable.setValue(i, 2, tooltip);
-
-            var options = {
-                timeline: { 
-                    rowLabelStyle: { },
-                    barLabelStyle: { }, 
-                },
-                hAxis: {
-                    format: 'dd/MM HH:MM',
-                },
-                colors: colors
-            }
-
-            chart.draw(dataTable, options);
-            var realheight= parseInt(`$("#WhoIsActiveTimeLine div:first-child div:first-child div:first-child div svg").attr( "height"))+70;
-            options.height=realheight
-            chart.draw(dataTable, options);
         }
+
+        var options = {
+            timeline: { 
+                rowLabelStyle: { },
+                barLabelStyle: { }, 
+            },
+            hAxis: {
+                format: 'dd/MM HH:MM',
+            },
+        }
+
+        chart.draw(dataTable, options);
+        var realheight= parseInt(`$("#SqlAgentJobs div:first-child div:first-child div:first-child div svg").attr( "height"))+70;
+        options.height=realheight
+        chart.draw(dataTable, options);
 
     }
 </script>
@@ -185,11 +186,8 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
     <div class="container-fluid">
     <h3>SQL jobs Timeline on <code>$ServerName</code> as reported by <code>Get-DbaAgentJobHistory</code></h3>
          <div class="col-12">
-            <div class="chart" id="WhoIsActiveTimeLine"></div>
+            <div class="chart" id="SqlAgentJobs"></div>
          </div>
-         <script>
-
-         </script>
 "@
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
