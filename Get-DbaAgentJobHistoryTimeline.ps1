@@ -63,20 +63,6 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
     html,body{height:100%;background-color:#c2c2c2;}
 
     .viewport {height:100%}
-
-    .wrapper{
-        display:grid;
-        grid-template-rows:auto;
-        grid-gap:5px;
-        width:99%;
-        margin-bottom:5px
-        height: 100%;
-    }
-    .col-1{grid-template-columns:1fr}
-    .col-2{grid-template-columns:1fr 1fr}
-    .col-3{grid-template-columns:1fr 1fr 1fr}
-    .col-4{grid-template-columns:1fr 1fr 1fr 1fr}
-    .col-5{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
     
     .chart{
         background-color:#fff;
