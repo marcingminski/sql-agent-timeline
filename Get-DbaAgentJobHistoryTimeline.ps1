@@ -117,7 +117,7 @@ $ServerName = $($($($Data.ComputerName | Select -first 1) + "\" + $($Data.Instan
         dataTable.addColumn({type: 'date', id: 'date_end'});
   
         dataTable.addRows([
-     $( $data | %{"['$($_.Job)','$($_.Status)','$(Get-StatusColor $_.Status)',$(Convert-ToJsDate $_.StartDate), $(Convert-ToJsDate $_.EndDate)],`r`n"})
+     $( $data | %{"['$(($_.Job -replace "\'",''))','$($_.Status)','$(Get-StatusColor $_.Status)',$(Convert-ToJsDate $_.StartDate), $(Convert-ToJsDate $_.EndDate)],`r`n"})
         ]);
 
         var paddingHeight = 20;
